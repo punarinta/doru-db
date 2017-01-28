@@ -1,5 +1,7 @@
 # DoruDB
 A simple file-based database. Stores data in JSON format. Supports basic CRUD operations and concurrency.
+The name comes from a Proto-Indo-European word 'doru' which meant 'a tree'. This database is one tool in a
+bigger collection with this name.
 
 # Usage
 #### Connecting to the database
