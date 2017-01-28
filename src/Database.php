@@ -139,10 +139,11 @@ class Database
      * Finds all the documents of a specific type
      *
      * @param $collection
+     * @param array $filter
      * @return array
      * @throws \Exception
      */
-    public function findAll($collection)
+    public function findAll($collection, $filter = [])
     {
         if (!$collection)
         {
@@ -154,7 +155,16 @@ class Database
 
         foreach (array_slice($files, 2) as $file)
         {
-            $rows[] = $this->storage->read($collection . '/' .  $file);
+            $row = $this->storage->read($collection . '/' .  $file);
+
+            if ($filter) foreach ($filter as $k => $v)
+            {
+                if (!isset ($row->{$k}) || $row->{$k} != $v) goto skip_row;
+            }
+
+            $rows[] = $row;
+
+            skip_row:;
         }
 
         return $rows;
