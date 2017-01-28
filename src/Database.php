@@ -12,6 +12,13 @@ class Database
     private $storage;
 
     /**
+     * List of auto-incremented indices for collections
+     *
+     * @var array
+     */
+    private $autoIds = [];
+
+    /**
      * Driver constructor.
      *
      * @param string $dir
@@ -19,16 +26,32 @@ class Database
     public function __construct($dir = 'db')
     {
         $this->storage = new Storage($dir);
+
+        if (file_exists($dir)) foreach (scandir($dir) as $collection)
+        {
+            if ($collection[0] == '.') continue;
+
+            if (count($files = scandir($dir . '/' . $collection)) > 2)
+            {
+                $this->autoIds[$collection] = end($files);
+            }
+        }
     }
 
     /**
      * Generates a random ID
      *
+     * @param $collection
      * @return string
      */
-    public function id()
+    public function id($collection)
     {
-        return sprintf('%04X%04X%08X', crc32(gethostname()) & 0xFFFF, (microtime(true) * 1000) & 0xFFFF, mt_rand(0, 4294967295));
+        if (!isset ($this->autoIds[$collection]))
+        {
+            $this->autoIds[$collection] = 0;
+        }
+
+        return ++$this->autoIds[$collection];
     }
 
     /**
@@ -48,10 +71,10 @@ class Database
 
         $object = (object) $object;
 
-        $object->id = isset ($object->id) ? $object->id : $this->id();
+        $object->id = isset ($object->id) ? $object->id : $this->id($collection);
 
         $this->storage->assureCollection($collection);
-        $this->storage->write($collection . '/' .  $object->id, $object);
+        $this->storage->write($collection . '/' .  sprintf('%08X', $object->id), $object);
 
         return $object;
     }
