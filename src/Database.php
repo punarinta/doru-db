@@ -177,10 +177,11 @@ class Database
         }
 
         $rows = [];
-        $files = scandir($dir = $this->storage->path() . $collection . '/', $setup['invert'] ?? 0);
+        $invert = $setup['invert'] ?? 0;
+        $files = scandir($dir = $this->storage->path() . $collection . '/', $invert);
 
          // remove '.' and '..' entries, apply offset and limit
-        $files = array_slice($files, 2 + ($setup['offset'] ?? 0), $setup['limit'] ?? null);
+        $files = array_slice($files, ($invert ? 0 : 2) + ($setup['offset'] ?? 0), $setup['limit'] ?? null);
 
         foreach ($files as $file)
         {
