@@ -2,4 +2,5 @@
 
 * CRUD operations
 * concurrency
-* findAll() method
+* simple sorting
+* limit/offset
