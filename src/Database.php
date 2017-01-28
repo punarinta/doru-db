@@ -71,7 +71,7 @@ class Database
 
         $object = (object) $object;
 
-        $object->id = isset ($object->id) ? $object->id : $this->id($collection);
+        $object->id = $object->id ?? $this->id($collection);
 
         $this->storage->assureCollection($collection);
         $this->storage->write($collection . '/' .  sprintf('%010d', $object->id), $object);
@@ -165,11 +165,11 @@ class Database
      * Finds all the documents of a specific type
      *
      * @param $collection
-     * @param array $filter
+     * @param array $setup
      * @return array
      * @throws \Exception
      */
-    public function findAll($collection, $filter = [])
+    public function findAll($collection, $setup = [])
     {
         if (!$collection)
         {
@@ -177,15 +177,18 @@ class Database
         }
 
         $rows = [];
-        $files = scandir($dir = $this->storage->path() . $collection . '/');
+        $files = scandir($dir = $this->storage->path() . $collection . '/', $setup['invert'] ?? 0);
 
-        foreach (array_slice($files, 2) as $file)
+         // remove '.' and '..' entries, apply offset and limit
+        $files = array_slice($files, 2 + ($setup['offset'] ?? 0), $setup['limit'] ?? null);
+
+        foreach ($files as $file)
         {
             $row = $this->storage->read($collection . '/' .  $file);
 
-            if ($filter) foreach ($filter as $k => $v)
+            foreach ($setup['filter'] ?? [] as $k => $v)
             {
-                if (!isset ($row->{$k}) || $row->{$k} != $v) goto skip_row;
+                if ($row->{$k} ?? null != $v) goto skip_row;
             }
 
             $rows[] = $row;
