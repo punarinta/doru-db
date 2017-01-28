@@ -188,7 +188,14 @@ class Database
 
             foreach ($setup['filter'] ?? [] as $k => $v)
             {
-                if ($row->{$k} ?? null != $v) goto skip_row;
+                if (is_callable($v))
+                {
+                    if (!$v($row->$k)) goto skip_row;
+                }
+                else
+                {
+                    if ($row->{$k} ?? null != $v) goto skip_row;
+                }
             }
 
             $rows[] = $row;
