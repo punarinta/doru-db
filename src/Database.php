@@ -193,13 +193,7 @@ class Database
         }
 
         $rows = [];
-        $invert = $setup['invert'] ?? 0;
-        $files = scandir($dir = $this->storage->path() . $collection . '/', $invert);
-
-         // remove '.' and '..' entries, apply offset and limit
-        $files = array_slice($files, ($invert ? 0 : 2) + ($setup['offset'] ?? 0), $setup['limit'] ?? null);
-
-        // TODO: work with custom indices here
+        $files = $this->getIndexedList($collection, $setup);
 
         foreach ($files as $file)
         {
@@ -223,5 +217,37 @@ class Database
         }
 
         return $rows;
+    }
+
+    /**
+     * Count specific documents
+     *
+     * @param $collection
+     * @param $setup
+     * @return int
+     */
+    public function count($collection, $setup)
+    {
+        // simply return the size of the prepared indexed list
+
+        return count($this->getIndexedList($collection, $setup));
+    }
+
+    /**
+     * Creates a list of documents based on setup
+     *
+     * @param $collection
+     * @param array $setup
+     * @return array
+     */
+    private function getIndexedList($collection, $setup = [])
+    {
+        $invert = $setup['invert'] ?? 0;
+        $files = scandir($dir = $this->storage->path() . $collection . '/', $invert);
+
+        // remove '.' and '..' entries, apply offset and limit
+        return array_slice($files, ($invert ? 0 : 2) + ($setup['offset'] ?? 0), $setup['limit'] ?? null);
+
+        // TODO: work with custom indices here
     }
 }
