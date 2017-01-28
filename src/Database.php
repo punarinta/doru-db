@@ -192,24 +192,43 @@ class Database
             throw new \Exception('Collection not specified');
         }
 
+        $limit = 0;
+        $offset = 0;
+
+        if ($setup['filter'] ?? 0)
+        {
+            // use deep scan
+            $limit = $setup['limit'] ?? 0;
+            $offset = $setup['offset'] ?? 0;
+            unset ($setup['limit']);
+            unset ($setup['offset']);
+        }
+
         $rows = [];
+        $count = 0;
         $files = $this->getIndexedList($collection, $setup);
 
         foreach ($files as $file)
         {
+            ++$count;
+
+            if ($offset && $count <= $offset) continue;
+
             $row = $this->storage->read($collection . '/' .  $file);
 
             foreach ($setup['filter'] ?? [] as $k => $v)
             {
                 if (is_callable($v))
                 {
-                    if (!$v($row->$k)) goto skip_row;
+                    if (!$v($row->{$k})) goto skip_row;
                 }
                 else
                 {
                     if ($row->{$k} ?? null != $v) goto skip_row;
                 }
             }
+
+            if ($limit && $count > $offset + $limit) continue;
 
             $rows[] = $row;
 
