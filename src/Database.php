@@ -50,7 +50,10 @@ class Database
 
         $object->id = isset ($object->id) ? $object->id : $this->id();
 
-        return $this->update($collection, $object);
+        $this->storage->assureCollection($collection);
+        $this->storage->write($collection . '/' .  $object->id, $object);
+
+        return $object;
     }
 
     /**
