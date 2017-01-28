@@ -3,7 +3,7 @@ A simple file-based database. Stores data in JSON format. Supports basic CRUD op
 
 # Sample usage
 ```
-use \DoruDB\Driver;
+use \DoruDB\Database;
 
 $db = new Database;
 
