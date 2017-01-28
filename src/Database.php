@@ -162,7 +162,23 @@ class Database
     }
 
     /**
-     * Finds all the documents of a specific type
+     * Find one specific document
+     *
+     * @param $collection
+     * @param array $setup
+     * @return mixed|null
+     */
+    public function find($collection, $setup = [])
+    {
+        $setup['limit'] = 1;
+
+        $rows = $this->findAll($collection, $setup);
+
+        return $rows ? $rows[0] : null;
+    }
+
+    /**
+     * Finds all specific documents
      *
      * @param $collection
      * @param array $setup
@@ -182,6 +198,8 @@ class Database
 
          // remove '.' and '..' entries, apply offset and limit
         $files = array_slice($files, ($invert ? 0 : 2) + ($setup['offset'] ?? 0), $setup['limit'] ?? null);
+
+        // TODO: work with custom indices here
 
         foreach ($files as $file)
         {
