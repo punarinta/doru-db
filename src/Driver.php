@@ -109,11 +109,11 @@ class Driver
             $id = $id->id;
         }
 
-        return $this->storage->remove($collection . '/' .  $id);
+        return unlink($this->storage->path() . $collection . '/' .  $id);
     }
 
     /**
-     * Reads a single document found by its ID
+     * Finds a document by its ID
      *
      * @param $collection
      * @param $id

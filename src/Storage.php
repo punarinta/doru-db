@@ -26,6 +26,16 @@ class Storage
     }
 
     /**
+     * Service function to return a path
+     *
+     * @return string
+     */
+    public function path()
+    {
+        return $this->path;
+    }
+
+    /**
      * @param $collection
      */
     public function assureCollection($collection)
@@ -106,16 +116,5 @@ class Storage
         fclose($fp);
 
         return true;
-    }
-
-    /**
-     * Removes a document
-     *
-     * @param $file
-     * @return bool
-     */
-    public function remove($file)
-    {
-        return unlink($this->path . $file);
     }
 }
