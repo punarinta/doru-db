@@ -2,7 +2,7 @@
 
 namespace DoruDB;
 
-class Driver
+class Database
 {
     /**
      * Internal storage object
