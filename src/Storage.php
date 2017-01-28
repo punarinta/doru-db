@@ -70,15 +70,10 @@ class Storage
             usleep(20000);
         }
 
-        $data = null;
-
-        if ($raw = fread($fp, filesize($filename)))
-        {
-            // TODO: release the lock right after read is complete (?)
-            $data = json_decode($raw);
-        }
+        $raw = fread($fp, filesize($filename));
 
         flock($fp, LOCK_UN);
+        $data = $raw ? json_decode($raw) : null;
         fclose($fp);
 
         return $data ?: [];
@@ -99,6 +94,8 @@ class Storage
         }
 
         $attempt = 0;
+        $raw = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
+
         while (!flock($fp, LOCK_EX | LOCK_NB))
         {
             if (++$attempt > 50)
@@ -109,9 +106,7 @@ class Storage
             usleep(20000);
         }
 
-        $raw = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
         fwrite($fp, $raw, mb_strlen($raw));
-
         flock($fp, LOCK_UN);
         fclose($fp);
 
