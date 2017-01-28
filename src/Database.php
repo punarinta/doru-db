@@ -139,6 +139,20 @@ class Database
     }
 
     /**
+     * Removes the whole documents collection
+     *
+     * @param $collection
+     * @return bool
+     */
+    public function truncate($collection)
+    {
+        $dir = $this->storage->path() . $collection;
+        array_map('unlink', glob("$dir/*"));
+
+        return rmdir($dir);
+    }
+
+    /**
      * Finds a document by its ID
      *
      * @param $collection
