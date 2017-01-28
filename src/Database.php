@@ -74,7 +74,7 @@ class Database
         $object->id = isset ($object->id) ? $object->id : $this->id($collection);
 
         $this->storage->assureCollection($collection);
-        $this->storage->write($collection . '/' .  sprintf('%08X', $object->id), $object);
+        $this->storage->write($collection . '/' .  sprintf('%010d', $object->id), $object);
 
         return $object;
     }
