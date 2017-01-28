@@ -42,7 +42,7 @@ class Storage
     {
         if (!file_exists($this->path . $collection))
         {
-            mkdir($this->path . $collection);
+            mkdir($this->path . $collection, 0700, true);
         }
     }
 
