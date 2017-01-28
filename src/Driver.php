@@ -134,4 +134,29 @@ class Driver
 
         return $this->storage->read($collection . '/' .  $id);
     }
+
+    /**
+     * Finds all the documents of a specific type
+     *
+     * @param $collection
+     * @return array
+     * @throws \Exception
+     */
+    public function findAll($collection)
+    {
+        if (!$collection)
+        {
+            throw new \Exception('Collection not specified');
+        }
+
+        $rows = [];
+        $files = scandir($dir = $this->storage->path() . $collection . '/');
+
+        foreach (array_slice($files, 2) as $file)
+        {
+            $rows[] = $this->storage->read($collection . '/' .  $file);
+        }
+
+        return $rows;
+    }
 }
