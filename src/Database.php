@@ -226,7 +226,7 @@ class Database
      * @param $setup
      * @return int
      */
-    public function count($collection, $setup)
+    public function count($collection, $setup = [])
     {
         // simply return the size of the prepared indexed list
 
