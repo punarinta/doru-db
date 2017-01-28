@@ -1,8 +1,8 @@
 {
   "name": "punarinta/doru-db",
-  "description": "A simple file-based database for my own small projects.",
+  "description": "A simple file-based database storing data in JSON.",
   "license": "MIT",
-  "keywords": ["database", "JSON"],
+  "keywords": ["database", "JSON", "NoSQL"],
   "authors":
   [
     {
