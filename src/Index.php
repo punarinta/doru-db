@@ -142,7 +142,7 @@ class Index
                 {
                     if (is_array($iV))
                     {
-                        if (in_array($iV, $document->id)) continue;
+                        if (in_array($document->id, $iV)) continue;
                         else $iV[] = $document->id;
                     }
                     else $iV = [$iV, $document->id];
