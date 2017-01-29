@@ -309,9 +309,15 @@ class Database
      * @param $collection
      * @param $field
      * @param array $options
+     * @return bool|int
      */
     public function addIndex($collection, $field, $options = [])
     {
+        if (isset ($this->indices[$collection][$field]))
+        {
+            return false;
+        }
+
         if (!file_exists($indexFile = $this->dir . '/' . $collection . '.' . $field))
         {
             if (!file_exists($this->dir)) mkdir($this->dir);
@@ -328,6 +334,8 @@ class Database
         }
 
         $this->indices[$collection][$field]->update($docs);
+
+        return count($docs);
     }
 
     /**
