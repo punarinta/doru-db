@@ -313,6 +313,7 @@ class Database
     {
         if (!file_exists($indexFile = $this->dir . '/' . $collection . '.' . $field))
         {
+            if (!file_exists($this->dir)) mkdir($this->dir);
             file_put_contents($indexFile, '[]');
         }
 
