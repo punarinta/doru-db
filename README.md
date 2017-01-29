@@ -43,8 +43,8 @@ $users = $db->find('user', ['filter' => ['name' => function ($x)
 $users = $db->findAll('user', ['offset' => 1, 'limit' => 1]);
 ```
 
-Using limit/offset with filters is slower than just limit/offset, as the database has to read all documents first
-to apply limit and offset.
+Using limit/offset with filters on the fields that do not have indices is slower than just limit/offset,
+as the database has to read all documents first to apply limit and offset.
 
 
 #### Sorting
