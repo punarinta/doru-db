@@ -319,6 +319,15 @@ class Database
         }
 
         $this->indices[$collection][$field] = new Index($collection, $field, $this->dir, $options);
+
+        $docs = [];
+
+        foreach (array_slice(scandir($this->dir . '/' . $collection . '/'), 2) as $file)
+        {
+            $docs[] = $this->storage->read($collection . '/' .  $file);
+        }
+
+        $this->indices[$collection][$field]->update($docs);
     }
 
     /**
