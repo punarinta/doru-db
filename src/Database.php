@@ -2,6 +2,10 @@
 
 namespace DoruDB;
 
+/**
+ * Class Database
+ * @package DoruDB
+ */
 class Database
 {
     /**
@@ -42,7 +46,7 @@ class Database
                 if ($object[0] == '.') continue;
 
                 $object = explode('.', $object);
-                $this->indices[$object[0]][$object[1]] = 1;
+                $this->indices[$object[0]][$object[1]] = new Index($object[0], $object[1], $dir);
 
                 continue;
             }
@@ -305,31 +309,7 @@ class Database
 
         if ($explicitIndex)
         {
-            $items = [];
-            $ids = json_decode(file_get_contents($this->storage->path() . $collection . '.' . $explicitIndex), 1) ?: [];
-
-            if ($indexFilter = $setup['filter'][$explicitIndex] ?? null)
-            {
-                // apply filtering here
-                foreach ($ids as $k => $v)
-                {
-                    if (is_callable($indexFilter))
-                    {
-                        if (!$indexFilter($k)) continue;
-                    }
-                    else
-                    {
-                        if ($k != $indexFilter) continue;
-                    }
-                    $items[] = sprintf('%010d', $v);
-                }
-            }
-            else
-            {
-                $items = array_values($items);
-            }
-
-            if ($invert) $items = array_reverse($items);
+            $items = $this->indices[$collection][$explicitIndex]->getList($setup);
         }
         else
         {
