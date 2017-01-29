@@ -23,6 +23,13 @@ class Index
     private $field;
 
     /**
+     * Internal key-value storage
+     *
+     * @var null
+     */
+    private $kv = null;
+
+    /**
      * Index constructor.
      *
      * @param $collection
@@ -43,7 +50,10 @@ class Index
      */
     public function getList($setup = [])
     {
-        $ids = json_decode(file_get_contents($this->filename), 1) ?: [];
+        $ids = json_decode(@file_get_contents($this->filename), 1) ?: [];
+
+        // save for next usage
+        $this->kv = $ids;
 
         $items = [];
         $invert = $setup['invert'] ?? 0;
@@ -75,5 +85,29 @@ class Index
         }
 
         return $items;
+    }
+
+    /**
+     * Updates an index
+     *
+     * @param $document
+     * @return bool|int
+     */
+    public function update($document)
+    {
+        if (!isset ($document->{$this->field}))
+        {
+            return false;
+        }
+
+        if (!$this->kv)
+        {
+            $this->kv = json_decode(@file_get_contents($this->filename), 1) ?: [];
+        }
+
+        $this->kv[$document->{$this->field}] = $document->id;
+        ksort($this->kv);
+
+        return file_put_contents($this->filename, json_encode($this->kv));
     }
 }
