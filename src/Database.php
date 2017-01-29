@@ -308,8 +308,9 @@ class Database
      *
      * @param $collection
      * @param $field
+     * @param array $options
      */
-    public function addIndex($collection, $field)
+    public function addIndex($collection, $field, $options = [])
     {
         if (!file_exists($indexFile = $this->dir . '/' . $collection . '.' . $field))
         {
@@ -317,7 +318,7 @@ class Database
             file_put_contents($indexFile, '[]');
         }
 
-        $this->indices[$collection][$field] = new Index($collection, $field, $this->dir);
+        $this->indices[$collection][$field] = new Index($collection, $field, $this->dir, $options);
     }
 
     /**

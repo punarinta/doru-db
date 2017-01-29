@@ -18,14 +18,14 @@ class Index
     /**
      * Attached field name
      *
-     * @var
+     * @var string
      */
     private $field;
 
     /**
      * Internal key-value storage
      *
-     * @var null
+     * @var array
      */
     private $kv = null;
 
@@ -34,7 +34,7 @@ class Index
      *
      * @var array
      */
-    private $settings = [];
+    private $options = null;
 
     /**
      * Index constructor.
@@ -42,10 +42,12 @@ class Index
      * @param $collection
      * @param $field
      * @param string $dir
+     * @param array $options
      */
-    public function __construct($collection, $field, $dir = 'db')
+    public function __construct($collection, $field, $dir = 'db', $options = [])
     {
         $this->field = $field;
+        $this->options = $options;
         $this->filename = $dir . '/' . $collection . '.' . $field;
     }
 
@@ -60,7 +62,7 @@ class Index
         $index = json_decode(@file_get_contents($this->filename)) ?: [];
 
         $ids = $index->kv ?? [];
-        $this->settings = $index->settings ?? [];
+        if (!$this->options) $this->options = $index->options ?? [];
 
         // save for next usage
         $this->kv = $ids;
@@ -118,7 +120,6 @@ class Index
         {
             $index = json_decode(@file_get_contents($this->filename), 1) ?: [];
             $this->kv = $index->kv ?? [];
-            $this->settings = $index->settings ?? [];
         }
 
         if (isset ($this->kv[$document->{$this->field}]))
@@ -127,7 +128,7 @@ class Index
 
             if ($iV == $document->id)
             {
-                // no need to update the index
+                // index will not change anyway
                 return true;
             }
             else
@@ -149,6 +150,6 @@ class Index
 
         ksort($this->kv);
 
-        return file_put_contents($this->filename, json_encode(['settings' => $this->settings, 'kv' => $this->kv]));
+        return file_put_contents($this->filename, json_encode(['options' => $this->options, 'kv' => $this->kv]));
     }
 }
