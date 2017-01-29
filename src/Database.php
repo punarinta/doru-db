@@ -19,6 +19,13 @@ class Database
     private $autoIds = [];
 
     /**
+     * List of available indices
+     *
+     * @var array
+     */
+    private $indices = [];
+
+    /**
      * Driver constructor.
      *
      * @param string $dir
@@ -27,13 +34,22 @@ class Database
     {
         $this->storage = new Storage($dir);
 
-        if (file_exists($dir)) foreach (scandir($dir) as $collection)
+        if (file_exists($dir)) foreach (scandir($dir) as $object)
         {
-            if ($collection[0] == '.') continue;
-
-            if (count($files = scandir($dir . '/' . $collection)) > 2)
+            if (strpos($object, '.') !== false)
             {
-                $this->autoIds[$collection] = end($files);
+                // is either a unix dot dir or an index
+                if ($object[0] == '.') continue;
+
+                $object = explode('.', $object);
+                $this->indices[$object[0]][$object[1]] = 1;
+
+                continue;
+            }
+
+            if (count($files = scandir($dir . '/' . $object)) > 2)
+            {
+                $this->autoIds[$object] = end($files);
             }
         }
     }
@@ -208,19 +224,28 @@ class Database
 
         $limit = 0;
         $offset = 0;
+        $explicitIndex = null;
 
-        if ($setup['filter'] ?? 0)
+        if ($filter = $setup['filter'] ?? 0)
         {
-            // use deep scan
-            $limit = $setup['limit'] ?? 0;
-            $offset = $setup['offset'] ?? 0;
-            unset ($setup['limit']);
-            unset ($setup['offset']);
+            if (count($filter) == 1 && isset ($this->indices[$collection][key($filter)]))
+            {
+                // index is available for this key
+                $explicitIndex = key($filter);
+            }
+            else
+            {
+                // we have to run full scan
+                $limit = $setup['limit'] ?? 0;
+                $offset = $setup['offset'] ?? 0;
+                unset ($setup['limit']);
+                unset ($setup['offset']);
+            }
         }
 
         $rows = [];
         $count = 0;
-        $files = $this->getIndexedList($collection, $setup);
+        $files = $this->getIndexedList($collection, $setup, $explicitIndex);
 
         foreach ($files as $file)
         {
@@ -267,20 +292,53 @@ class Database
     }
 
     /**
-     * Creates a list of documents based on setup
+     * Creates a list of document IDs based on setup
      *
      * @param $collection
      * @param array $setup
+     * @param string|null $explicitIndex
      * @return array
      */
-    private function getIndexedList($collection, $setup = [])
+    private function getIndexedList($collection, $setup = [], $explicitIndex = null)
     {
         $invert = $setup['invert'] ?? 0;
-        $files = scandir($dir = $this->storage->path() . $collection . '/', $invert);
 
-        // remove '.' and '..' entries, apply offset and limit
-        return array_slice($files, ($invert ? 0 : 2) + ($setup['offset'] ?? 0), $setup['limit'] ?? null);
+        if ($explicitIndex)
+        {
+            $items = [];
+            $ids = json_decode(file_get_contents($this->storage->path() . $collection . '.' . $explicitIndex), 1) ?: [];
 
-        // TODO: work with custom indices here
+            if ($indexFilter = $setup['filter'][$explicitIndex] ?? null)
+            {
+                // apply filtering here
+                foreach ($ids as $k => $v)
+                {
+                    if (is_callable($indexFilter))
+                    {
+                        if (!$indexFilter($k)) continue;
+                    }
+                    else
+                    {
+                        if ($k != $indexFilter) continue;
+                    }
+                    $items[] = sprintf('%010d', $v);
+                }
+            }
+            else
+            {
+                $items = array_values($items);
+            }
+
+            if ($invert) $items = array_reverse($items);
+        }
+        else
+        {
+            $items = scandir($dir = $this->storage->path() . $collection . '/', $invert);
+
+            // remove '.' and '..' entries, apply offset and limit
+            $items = array_slice($items, $invert ? 0 : 2, count($items) - 2);
+        }
+
+        return array_slice($items, $setup['offset'] ?? 0, $setup['limit'] ?? null);
     }
 }
