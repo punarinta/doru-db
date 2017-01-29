@@ -79,10 +79,10 @@ $db->removeIndex('user', 'lastLogin');
 
 # ToDo
 * make ID immutable
-* allow unique indices
+* unique indices
 * improve index r/w performance
 * sync index on document update
-
+* counting with non-indexed filter
 
 # License
 This project is licensed under the terms of [**MIT**](https://github.com/punarinta/doru-db/blob/master/LICENSE) license.

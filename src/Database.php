@@ -293,14 +293,32 @@ class Database
      * Count specific documents
      *
      * @param $collection
-     * @param $setup
+     * @param array $setup
      * @return int
+     * @throws \Exception
      */
     public function count($collection, $setup = [])
     {
         // simply return the size of the prepared indexed list
 
-        return count($this->getIndexedList($collection, $setup));
+        $explicitIndex = null;
+        $setup['limit'] = null;
+        $setup['offset'] = 0;
+
+        if ($filter = $setup['filter'] ?? 0)
+        {
+            if (count($filter) == 1 && isset ($this->indices[$collection][key($filter)]))
+            {
+                // index is available for this key
+                $explicitIndex = key($filter);
+            }
+            else
+            {
+                throw new \Exception('Counting with non-indexed filters is not yet supported');
+            }
+        }
+
+        return count($this->getIndexedList($collection, $setup, $explicitIndex));
     }
 
     /**
