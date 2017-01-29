@@ -329,7 +329,10 @@ class Database
      */
     public function updateIndex($collection, $field, $doc)
     {
-        $this->indices[$collection][$field]->update($doc);
+        if (isset ($this->indices[$collection][$field]))
+        {
+            $this->indices[$collection][$field]->update($doc);
+        }
     }
 
     /***
