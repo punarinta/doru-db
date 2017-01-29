@@ -4,3 +4,4 @@
 * concurrency
 * simple sorting
 * limit/offset
+* auxiliary indices support
