@@ -106,7 +106,7 @@ class Storage
             usleep(20000);
         }
 
-        fwrite($fp, $raw, mb_strlen($raw));
+        fwrite($fp, $raw, strlen($raw));
         flock($fp, LOCK_UN);
         fclose($fp);
 
