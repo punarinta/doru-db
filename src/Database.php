@@ -9,6 +9,13 @@ namespace DoruDB;
 class Database
 {
     /**
+     * Working directory
+     *
+     * @var string
+     */
+    private $dir;
+
+    /**
      * Internal storage object
      *
      * @var Storage
@@ -36,6 +43,7 @@ class Database
      */
     public function __construct($dir = 'db')
     {
+        $this->dir = $dir;
         $this->storage = new Storage($dir);
 
         if (file_exists($dir)) foreach (scandir($dir) as $object)
@@ -293,6 +301,46 @@ class Database
         // simply return the size of the prepared indexed list
 
         return count($this->getIndexedList($collection, $setup));
+    }
+
+    /**
+     * Adds an index
+     *
+     * @param $collection
+     * @param $field
+     */
+    public function addIndex($collection, $field)
+    {
+        if (!file_exists($indexFile = $this->dir . '/' . $collection . '.' . $field))
+        {
+            file_put_contents($indexFile, '[]');
+        }
+
+        $this->indices[$collection][$field] = new Index($collection, $field, $this->dir);
+    }
+
+    /**
+     * Updates an index
+     *
+     * @param $collection
+     * @param $field
+     * @param $doc
+     */
+    public function updateIndex($collection, $field, $doc)
+    {
+        $this->indices[$collection][$field]->update($doc);
+    }
+
+    /***
+     * Removes an existing index
+     *
+     * @param $collection
+     * @param $field
+     */
+    public function removeIndex($collection, $field)
+    {
+        @unlink($this->dir . '/' . $collection . '.' . $field);
+        unset ($this->indices[$collection][$field]);
     }
 
     /**
