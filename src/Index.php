@@ -106,47 +106,55 @@ class Index
     /**
      * Updates an index
      *
-     * @param $document
+     * @param object|array $documents
      * @return bool|int
      */
-    public function update($document)
+    public function update($documents)
     {
-        if (!isset ($document->{$this->field}))
+        if (!is_array($documents))
         {
-            return false;
+            $documents = [$documents];
         }
 
-        if (!$this->kv)
+        foreach ($documents as $document)
         {
-            $index = json_decode(@file_get_contents($this->filename), 1) ?: [];
-            $this->kv = $index->kv ?? [];
-        }
-
-        if (isset ($this->kv[$document->{$this->field}]))
-        {
-            $iV = $this->kv[$document->{$this->field}];
-
-            if ($iV == $document->id)
+            if (!isset ($document->{$this->field}))
             {
-                // index will not change anyway
-                return true;
+                continue;
+            }
+
+            if (!$this->kv)
+            {
+                $index = json_decode(@file_get_contents($this->filename), 1) ?: [];
+                $this->kv = $index->kv ?? [];
+            }
+
+            if (isset ($this->kv[$document->{$this->field}]))
+            {
+                $iV = $this->kv[$document->{$this->field}];
+
+                if ($iV == $document->id)
+                {
+                    // index will not change anyway
+                    continue;
+                }
+                else
+                {
+                    if (is_array($iV))
+                    {
+                        if (in_array($iV, $document->id)) continue;
+                        else $iV[] = $document->id;
+                    }
+                    else $iV = [$iV, $document->id];
+                }
             }
             else
             {
-                if (is_array($iV))
-                {
-                    if (in_array($iV, $document->id)) return true;
-                    else $iV[] = $document->id;
-                }
-                else $iV = [$iV, $document->id];
+                $iV = $document->id;
             }
-        }
-        else
-        {
-            $iV = $document->id;
-        }
 
-        $this->kv[$document->{$this->field}] = $iV;
+            $this->kv[$document->{$this->field}] = $iV;
+        }
 
         ksort($this->kv);
 
