@@ -67,10 +67,10 @@ $db->truncate('user');
 Index support is still experimental. Use with care. Indices are used to speed up filter, limit and offset operations.
 
 ```php
-// add index (it needs to be populated after that)
-$db->addIndex('user', 'lastLogin');
+// add an index or update it automatically
+$db->rebuildIndex('user', 'lastLogin');
 
-// update index
+// update index manually with one or more documents
 $db->updateIndex('user', 'lastLogin', $someDocument);
 
 // remove index completely from the database
