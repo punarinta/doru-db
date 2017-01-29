@@ -63,5 +63,19 @@ $db->delete('user', 1337);
 $db->truncate('user');
 ```
 
+#### Working with indices
+Index support is still experimental. Use with care. Indices are used to speed up filter, limit and offset operations.
+
+```php
+// add index (it needs to be populated after that)
+$db->addIndex('user', 'lastLogin');
+
+// update index
+$db->updateIndex('user', 'lastLogin', $someDocument);
+
+// remove index completely from the database
+$db->removeIndex('user', 'lastLogin');
+```
+
 # License
 This project is licensed under the terms of [**MIT**](https://github.com/punarinta/doru-db/blob/master/LICENSE) license.
