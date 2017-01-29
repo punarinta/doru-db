@@ -32,7 +32,7 @@ class Database
     /**
      * List of available indices
      *
-     * @var array
+     * @var Index[][]
      */
     private $indices = [];
 
