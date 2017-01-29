@@ -30,6 +30,13 @@ class Index
     private $kv = null;
 
     /**
+     * Index settings
+     *
+     * @var array
+     */
+    private $settings = [];
+
+    /**
      * Index constructor.
      *
      * @param $collection
@@ -50,7 +57,10 @@ class Index
      */
     public function getList($setup = [])
     {
-        $ids = json_decode(@file_get_contents($this->filename), 1) ?: [];
+        $index = json_decode(@file_get_contents($this->filename)) ?: [];
+
+        $ids = $index->kv ?? [];
+        $this->settings = $index->settings ?? [];
 
         // save for next usage
         $this->kv = $ids;
@@ -71,7 +81,11 @@ class Index
                 {
                     if ($k != $indexFilter) continue;
                 }
-                $items[] = sprintf('%010d', $v);
+
+                foreach (is_array($v) ? $v : [$v] as $id)
+                {
+                    $items[] = sprintf('%010d', $id);
+                }
             }
         }
         else
@@ -102,12 +116,39 @@ class Index
 
         if (!$this->kv)
         {
-            $this->kv = json_decode(@file_get_contents($this->filename), 1) ?: [];
+            $index = json_decode(@file_get_contents($this->filename), 1) ?: [];
+            $this->kv = $index->kv ?? [];
+            $this->settings = $index->settings ?? [];
         }
 
-        $this->kv[$document->{$this->field}] = $document->id;
+        if (isset ($this->kv[$document->{$this->field}]))
+        {
+            $iV = $this->kv[$document->{$this->field}];
+
+            if ($iV == $document->id)
+            {
+                // no need to update the index
+                return true;
+            }
+            else
+            {
+                if (is_array($iV))
+                {
+                    if (in_array($iV, $document->id)) return true;
+                    else $iV[] = $document->id;
+                }
+                else $iV = [$iV, $document->id];
+            }
+        }
+        else
+        {
+            $iV = $document->id;
+        }
+
+        $this->kv[$document->{$this->field}] = $iV;
+
         ksort($this->kv);
 
-        return file_put_contents($this->filename, json_encode($this->kv));
+        return file_put_contents($this->filename, json_encode(['settings' => $this->settings, 'kv' => $this->kv]));
     }
 }
