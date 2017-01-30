@@ -185,7 +185,7 @@ class Database
      *
      * @param $collection
      * @param $id
-     * @return array|bool|null
+     * @return bool|null|object
      * @throws \Exception
      */
     public function findById($collection, $id)

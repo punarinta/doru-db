@@ -50,7 +50,7 @@ class Storage
      * Reads data from a document
      *
      * @param $file
-     * @return array|bool|null
+     * @return object|bool|null
      */
     public function read($file)
     {
