@@ -399,7 +399,10 @@ class Database
         }
         else
         {
-            $items = scandir($dir = $this->storage->path() . $collection . '/', $invert);
+            if (!$items = @scandir($dir = $this->storage->path() . $collection . '/', $invert))
+            {
+                return [];
+            }
 
             // remove '.' and '..' entries, apply offset and limit
             $items = array_slice($items, $invert ? 0 : 2, count($items) - 2);
