@@ -54,7 +54,7 @@ class Storage
      */
     public function read($file)
     {
-        if (!$fp = fopen($filename = $this->path . $file, 'r'))
+        if (!$fp = @fopen($filename = $this->path . $file, 'r'))
         {
             return null;
         }
