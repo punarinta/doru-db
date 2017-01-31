@@ -275,7 +275,7 @@ class Database
                 }
                 else
                 {
-                    if ($row->{$k} ?? null != $v) goto skip_row;
+                    if (($row->{$k} ?? null) != $v) goto skip_row;
                 }
             }
 
