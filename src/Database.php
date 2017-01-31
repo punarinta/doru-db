@@ -133,7 +133,7 @@ class Database
         }
 
         $this->storage->assureCollection($collection);
-        $this->storage->write($collection . '/' .  $object->id, $object);
+        $this->storage->write($collection . '/' .  sprintf('%010d', $object->id), $object);
 
         return $object;
     }
@@ -163,7 +163,7 @@ class Database
             $id = $id->id;
         }
 
-        return unlink($this->storage->path() . $collection . '/' .  $id);
+        return unlink($this->storage->path() . $collection . '/' .  sprintf('%010d', $id));
     }
 
     /**
@@ -200,7 +200,7 @@ class Database
             throw new \Exception('Object ID not specified');
         }
 
-        return $this->storage->read($collection . '/' .  $id);
+        return $this->storage->read($collection . '/' .  sprintf('%010d', $id));
     }
 
     /**
