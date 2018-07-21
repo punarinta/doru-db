@@ -1,9 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DoruDB;
 
 /**
  * Class Index
+ * Defines operations with indices
+ *
  * @package DoruDB
  */
 class Index
@@ -44,7 +48,7 @@ class Index
      * @param string $dir
      * @param array $options
      */
-    public function __construct($collection, $field, $dir = 'db', $options = [])
+    public function __construct(string $collection, string $field, string $dir = 'db', array $options = [])
     {
         $this->field = $field;
         $this->options = $options;
@@ -57,7 +61,7 @@ class Index
      * @param array $setup
      * @return array
      */
-    public function getList($setup = [])
+    public function getList(array $setup = []) : array
     {
         $index = json_decode(@file_get_contents($this->filename)) ?: [];
 
@@ -106,10 +110,10 @@ class Index
     /**
      * Updates an index
      *
-     * @param object|array $documents
-     * @return bool|int
+     * @param array $documents
+     * @return bool
      */
-    public function update($documents)
+    public function update($documents) : bool
     {
         if (!is_array($documents))
         {
@@ -158,6 +162,6 @@ class Index
 
         ksort($this->kv);
 
-        return file_put_contents($this->filename, json_encode(['options' => $this->options, 'kv' => $this->kv]));
+        return file_put_contents($this->filename, json_encode(['options' => $this->options, 'kv' => $this->kv])) !== false;
     }
 }

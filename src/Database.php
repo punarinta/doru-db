@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DoruDB;
 
 /**
@@ -41,7 +43,7 @@ class Database
      *
      * @param string $dir
      */
-    public function __construct($dir = 'db')
+    public function __construct(string $dir = 'db')
     {
         $this->dir = $dir;
         $this->storage = new Storage($dir);
@@ -69,10 +71,10 @@ class Database
     /**
      * Generates a random ID
      *
-     * @param $collection
-     * @return string
+     * @param string $collection
+     * @return int
      */
-    public function id($collection)
+    public function id(string $collection) : int
     {
         if (!isset ($this->autoIds[$collection]))
         {
@@ -86,22 +88,23 @@ class Database
      * Creates a document
      *
      * @param $collection
-     * @param array $object
+     * @param array $objectArray
      * @return mixed
      * @throws \Exception
      */
-    public function create($collection, $object = [])
+    public function create(string $collection, array $objectArray = []) : object
     {
         if (!$collection)
         {
             throw new \Exception('Collection not specified');
         }
 
-        $object = (object) $object;
-
-        $object->id = $object->id ?? $this->id($collection);
+        // TODO: check that collection name does not contain any illegal symbols
 
         $this->storage->assureCollection($collection);
+
+        $object = (object) $objectArray;
+        $object->id = $object->id ?? $this->id($collection);
         $this->storage->write($collection . '/' .  sprintf('%010d', $object->id), $object);
 
         return $object;
@@ -115,7 +118,7 @@ class Database
      * @return mixed
      * @throws \Exception
      */
-    public function update($collection, $object)
+    public function update(string $collection, $object)
     {
         if (!$collection)
         {
@@ -146,7 +149,7 @@ class Database
      * @return bool
      * @throws \Exception
      */
-    public function delete($collection, $id)
+    public function delete(string $collection, $id) : bool
     {
         if (!$collection)
         {
@@ -158,7 +161,7 @@ class Database
             throw new \Exception('Object (or its ID) not specified');
         }
 
-        if (!is_string($id))
+        if (is_object($id))
         {
             $id = $id->id;
         }
@@ -169,10 +172,10 @@ class Database
     /**
      * Removes the whole documents collection
      *
-     * @param $collection
+     * @param string $collection
      * @return bool
      */
-    public function truncate($collection)
+    public function truncate(string $collection) : bool
     {
         $dir = $this->storage->path() . $collection;
         array_map('unlink', glob("$dir/*"));
@@ -188,7 +191,7 @@ class Database
      * @return bool|null|object
      * @throws \Exception
      */
-    public function findById($collection, $id)
+    public function findById(string $collection, int $id)
     {
         if (!$collection)
         {
@@ -206,11 +209,12 @@ class Database
     /**
      * Find one specific document
      *
-     * @param $collection
+     * @param string $collection
      * @param array $setup
      * @return mixed|null
+     * @throws \Exception
      */
-    public function find($collection, $setup = [])
+    public function find(string $collection, array $setup = [])
     {
         $setup['limit'] = 1;
 
@@ -222,12 +226,12 @@ class Database
     /**
      * Finds all specific documents
      *
-     * @param $collection
+     * @param string $collection
      * @param array $setup
      * @return array
      * @throws \Exception
      */
-    public function findAll($collection, $setup = [])
+    public function findAll(string $collection, array $setup = []) : array
     {
         if (!$collection)
         {
@@ -292,12 +296,12 @@ class Database
     /**
      * Count specific documents
      *
-     * @param $collection
+     * @param string $collection
      * @param array $setup
      * @return int
      * @throws \Exception
      */
-    public function count($collection, $setup = [])
+    public function count(string $collection, array $setup = []) : int
     {
         // simply return the size of the prepared indexed list
 
@@ -322,14 +326,14 @@ class Database
     }
 
     /**
-     * Builds or rebuilds an index
+     * Builds or rebuilds an index. Returns index size.
      *
-     * @param $collection
-     * @param $field
+     * @param string $collection
+     * @param string $field
      * @param array $options
-     * @return bool|int
+     * @return int
      */
-    public function rebuildIndex($collection, $field, $options = [])
+    public function rebuildIndex(string $collection, string $field, array $options = []) : int
     {
         if (!file_exists($indexFile = $this->dir . '/' . $collection . '.' . $field))
         {
@@ -357,11 +361,11 @@ class Database
     /**
      * Updates an index
      *
-     * @param $collection
-     * @param $field
-     * @param array|object $doc
+     * @param string $collection
+     * @param string $field
+     * @param $doc
      */
-    public function updateIndex($collection, $field, $doc)
+    public function updateIndex(string $collection, string $field, $doc) : void
     {
         if (isset ($this->indices[$collection][$field]))
         {
@@ -372,10 +376,10 @@ class Database
     /***
      * Removes an existing index
      *
-     * @param $collection
-     * @param $field
+     * @param string $collection
+     * @param string $field
      */
-    public function removeIndex($collection, $field)
+    public function removeIndex(string $collection, string $field) : void
     {
         @unlink($this->dir . '/' . $collection . '.' . $field);
         unset ($this->indices[$collection][$field]);
@@ -384,12 +388,12 @@ class Database
     /**
      * Creates a list of document IDs based on setup
      *
-     * @param $collection
+     * @param string $collection
      * @param array $setup
      * @param string|null $explicitIndex
      * @return array
      */
-    private function getIndexedList($collection, $setup = [], $explicitIndex = null)
+    private function getIndexedList(string $collection, array $setup = [], string $explicitIndex = null) : array
     {
         $invert = $setup['invert'] ?? 0;
 

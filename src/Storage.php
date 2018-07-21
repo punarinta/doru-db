@@ -1,9 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DoruDB;
+
+const READ_LOCK_WAIT = 20000;
+const WRITE_LOCK_WAIT = 20000;
+const READ_ATTEMPTS = 50;
+const WRITE_ATTEMPTS = 50;
 
 /**
  * Class Storage
+ * Defines storage layer
+ *
  * @package DoruDB
  */
 class Storage
@@ -20,7 +29,7 @@ class Storage
      *
      * @param string $dir
      */
-    public function __construct($dir = 'db')
+    public function __construct(string $dir = 'db')
     {
         $this->path = $dir . '/';
     }
@@ -30,15 +39,17 @@ class Storage
      *
      * @return string
      */
-    public function path()
+    public function path() : string
     {
         return $this->path;
     }
 
     /**
-     * @param $collection
+     * Assures that collection directory exists
+     *
+     * @param string $collection
      */
-    public function assureCollection($collection)
+    public function assureCollection(string $collection) : void
     {
         if (!file_exists($this->path . $collection))
         {
@@ -49,25 +60,26 @@ class Storage
     /**
      * Reads data from a document
      *
-     * @param $file
-     * @return object|bool|null
+     * @param string $file
+     * @return mixed
+     * @throws \Exception
      */
-    public function read($file)
+    public function read(string $file) : ?object
     {
         if (!$fp = @fopen($filename = $this->path . $file, 'r'))
         {
-            return null;
+            throw new \Exception('Unable to open storage: ' . $file);
         }
 
         $attempt = 0;
         while (!flock($fp, LOCK_SH | LOCK_NB))
         {
-            if (++$attempt > 50)
+            if (++$attempt > READ_ATTEMPTS)
             {
                 fclose($fp);
-                return false;
+                throw new \Exception('Read lock timeout exceeded: ' . intval(READ_ATTEMPTS * READ_LOCK_WAIT / 1000) . ' ms');
             }
-            usleep(20000);
+            usleep(READ_LOCK_WAIT);
         }
 
         $raw = fread($fp, filesize($filename));
@@ -76,21 +88,21 @@ class Storage
         $data = $raw ? json_decode($raw) : null;
         fclose($fp);
 
-        return $data ?: [];
+        return $data ?? null;
     }
 
     /**
      * Writes data to a document
      *
-     * @param $file
-     * @param $data
-     * @return bool
+     * @param string $file
+     * @param null $data
+     * @throws \Exception
      */
-    public function write($file, $data = null)
+    public function write(string $file, $data = null) : void
     {
         if (!$fp = fopen($this->path . $file, 'w'))
         {
-            return false;
+            throw new \Exception('Unable to open storage: ' . $file);
         }
 
         $attempt = 0;
@@ -98,18 +110,16 @@ class Storage
 
         while (!flock($fp, LOCK_EX | LOCK_NB))
         {
-            if (++$attempt > 50)
+            if (++$attempt > WRITE_ATTEMPTS)
             {
                 fclose($fp);
-                return false;
+                throw new \Exception('Write lock timeout exceeded: ' . intval(WRITE_ATTEMPTS * WRITE_LOCK_WAIT / 1000) . ' ms');
             }
-            usleep(20000);
+            usleep(WRITE_LOCK_WAIT);
         }
 
         fwrite($fp, $raw, strlen($raw));
         flock($fp, LOCK_UN);
         fclose($fp);
-
-        return true;
     }
 }
