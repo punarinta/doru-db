@@ -99,7 +99,10 @@ class Database
             throw new \Exception('Collection not specified');
         }
 
-        // TODO: check that collection name does not contain any illegal symbols
+        if (!preg_match('/^[\w-]+$/', $collection))
+        {
+            throw new \Exception('Only [a-zA-Z0-9_-] are allowed in the collection names.');
+        }
 
         $this->storage->assureCollection($collection);
 
