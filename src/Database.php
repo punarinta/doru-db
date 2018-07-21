@@ -276,7 +276,7 @@ class Database
         {
             ++$count;
 
-            if ($offset && $count <= $offset) continue;
+            if ($count <= $offset) continue;
 
             $row = $this->storage->read($collection . '/' .  $file);
 
