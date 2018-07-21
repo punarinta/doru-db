@@ -201,12 +201,12 @@ class Database
     /**
      * Finds a document by its ID
      *
-     * @param $collection
-     * @param $id
+     * @param string $collection
+     * @param int $id
      * @return mixed
      * @throws \Exception
      */
-    public function findById(string $collection, int $id)
+    public function findById(string $collection, int $id) : ?object
     {
         if (!$collection)
         {
@@ -224,7 +224,7 @@ class Database
      * @return mixed|null
      * @throws \Exception
      */
-    public function find(string $collection, array $setup = [])
+    public function find(string $collection, array $setup = []) : ?object
     {
         $setup['limit'] = 1;
 
@@ -318,8 +318,6 @@ class Database
      */
     public function count(string $collection, array $setup = []) : int
     {
-        // simply return the size of the prepared indexed list
-
         $explicitIndex = null;
         $setup['limit'] = null;
         $setup['offset'] = 0;
@@ -330,13 +328,42 @@ class Database
             {
                 // index is available for this key
                 $explicitIndex = key($filter);
+
+                if (isset ($setup['explain']))
+                {
+                    $this->explanations = ["Index '$explicitIndex' used"];
+                }
             }
             else
             {
-                throw new \Exception('Counting with non-indexed filters is not yet supported');
+                $count = 0;
+
+                if (isset ($setup['explain']))
+                {
+                    $this->explanations = ['No index used'];
+                }
+
+                // iterate through all the documents and check filters (slooow)
+                foreach ($this->findAll($collection, $setup) as $row)
+                {
+                    foreach ($filter as $k => $v)
+                    {
+                        if (is_callable($v))
+                        {
+                            if ($v($row->{$k})) { ++$count; break; }
+                        }
+                        else
+                        {
+                            if (($row->{$k} ?? null) == $v) { ++$count; break; }
+                        }
+                    }
+                }
+
+                return $count;
             }
         }
 
+        // simply return the size of the prepared indexed list
         return count($this->getIndexedList($collection, $setup, $explicitIndex));
     }
 
