@@ -39,6 +39,13 @@ class Database
     private $indices = [];
 
     /**
+     * If 'explain' mode is on this contains a list of explanations
+     *
+     * @var array
+     */
+    private $explanations = [];
+
+    /**
      * Driver constructor.
      *
      * @param string $dir
@@ -101,7 +108,7 @@ class Database
 
         if (!preg_match('/^[\w-]+$/', $collection))
         {
-            throw new \Exception('Only [a-zA-Z0-9_-] are allowed in the collection names.');
+            throw new \Exception('Only [a-zA-Z0-9_-] are allowed in collection names.');
         }
 
         $this->storage->assureCollection($collection);
@@ -127,24 +134,19 @@ class Database
     /**
      * Updates a document. Always upserts.
      *
-     * @param $collection
-     * @param $object
+     * @param string $collection
+     * @param mixed $object
      * @return mixed
      * @throws \Exception
      */
-    public function update(string $collection, $object)
+    public function update(string $collection, object $object) : object
     {
         if (!$collection)
         {
-            throw new \Exception('Collection not specified');
+            throw new \Exception('Empty collection name');
         }
 
-        if (!$object)
-        {
-            throw new \Exception('Object not specified');
-        }
-
-        if (!isset ($object->id) || !$object->id)
+        if (!isset ($object->id))
         {
             throw new \Exception('Object does not have an ID');
         }
@@ -167,17 +169,16 @@ class Database
     {
         if (!$collection)
         {
-            throw new \Exception('Collection not specified');
-        }
-
-        if (!$id)
-        {
-            throw new \Exception('Object (or its ID) not specified');
+            throw new \Exception('Empty collection name');
         }
 
         if (is_object($id))
         {
             $id = $id->id;
+        }
+        elseif (!is_int($id))
+        {
+            throw new \Exception('Object (or its ID) not specified');
         }
 
         return unlink($this->storage->path() . $collection . '/' .  sprintf('%010d', $id));
@@ -209,7 +210,7 @@ class Database
     {
         if (!$collection)
         {
-            throw new \Exception('Collection not specified');
+            throw new \Exception('Empty collection name');
         }
 
         return $this->storage->read($collection . '/' .  sprintf('%010d', $id));
@@ -244,7 +245,7 @@ class Database
     {
         if (!$collection)
         {
-            throw new \Exception('Collection not specified');
+            throw new \Exception('Empty collection name');
         }
 
         $limit = 0;
@@ -261,11 +262,16 @@ class Database
             else
             {
                 // we have to run full scan
-                $limit = $setup['limit'] ?? 0;
+                $limit = $setup['limit'] ?? null;
                 $offset = $setup['offset'] ?? 0;
                 unset ($setup['limit']);
                 unset ($setup['offset']);
             }
+        }
+
+        if (isset ($setup['explain']))
+        {
+            $this->explanations = [$explicitIndex ? "Index '$explicitIndex' used" : 'No index used'];
         }
 
         $rows = [];
@@ -292,7 +298,7 @@ class Database
                 }
             }
 
-            if ($limit && $count > $offset + $limit) continue;
+            if ($limit && $count > $offset + $limit) break;
 
             $rows[] = $row;
 
@@ -341,6 +347,7 @@ class Database
      * @param string $field
      * @param array $options
      * @return int
+     * @throws \Exception
      */
     public function rebuildIndex(string $collection, string $field, array $options = []) : int
     {
@@ -372,9 +379,9 @@ class Database
      *
      * @param string $collection
      * @param string $field
-     * @param $doc
+     * @param mixed $doc
      */
-    public function updateIndex(string $collection, string $field, $doc) : void
+    public function updateIndex(string $collection, string $field, object $doc) : void
     {
         if (isset ($this->indices[$collection][$field]))
         {
@@ -392,6 +399,25 @@ class Database
     {
         @unlink($this->dir . '/' . $collection . '.' . $field);
         unset ($this->indices[$collection][$field]);
+    }
+
+    /**
+     * Returns or displays all the present explanations
+     *
+     * @param bool $print
+     * @return array
+     */
+    public function explain(bool $print = false) : array
+    {
+        if ($print)
+        {
+            foreach ($this->explanations as $e)
+            {
+                echo "* $e\n";
+            }
+        }
+
+        return $this->explanations;
     }
 
     /**
