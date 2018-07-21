@@ -95,10 +95,10 @@ class Storage
      * Writes data to a document
      *
      * @param string $file
-     * @param null $data
+     * @param mixed $data
      * @throws \Exception
      */
-    public function write(string $file, $data = null) : void
+    public function write(string $file, object $data) : void
     {
         if (!$fp = fopen($this->path . $file, 'w'))
         {
