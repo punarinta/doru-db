@@ -202,7 +202,7 @@ class Database
      *
      * @param $collection
      * @param $id
-     * @return bool|null|object
+     * @return mixed
      * @throws \Exception
      */
     public function findById(string $collection, int $id)
@@ -210,11 +210,6 @@ class Database
         if (!$collection)
         {
             throw new \Exception('Collection not specified');
-        }
-
-        if (!$id)
-        {
-            throw new \Exception('Object ID not specified');
         }
 
         return $this->storage->read($collection . '/' .  sprintf('%010d', $id));
