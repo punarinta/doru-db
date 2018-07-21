@@ -104,7 +104,18 @@ class Database
         $this->storage->assureCollection($collection);
 
         $object = (object) $objectArray;
-        $object->id = $object->id ?? $this->id($collection);
+        if (isset ($object->id))
+        {
+            if (!is_int($object->id))
+            {
+                throw new \Exception('ID must be an integer. Provided: ' . $object->id);
+            }
+        }
+        else
+        {
+            $object->id = $this->id($collection);
+        }
+
         $this->storage->write($collection . '/' .  sprintf('%010d', $object->id), $object);
 
         return $object;
