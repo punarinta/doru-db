@@ -126,7 +126,14 @@ class Database
             $object->id = $this->id($collection);
         }
 
-        $this->storage->write($collection . '/' .  sprintf('%010d', $object->id), $object);
+        $relativeFilename = $collection . '/' .  sprintf('%010d', $object->id);
+
+        if (file_exists($this->storage->path() . $relativeFilename))
+        {
+            throw new \Exception('Cannot create a record with a duplicate ID');
+        }
+
+        $this->storage->write($relativeFilename, $object);
 
         return $object;
     }
