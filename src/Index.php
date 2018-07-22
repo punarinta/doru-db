@@ -72,7 +72,6 @@ class Index
         $this->kv = $ids;
 
         $items = [];
-        $invert = $setup['invert'] ?? 0;
 
         if ($indexFilter = $setup['filter'][$this->field] ?? null)
         {
@@ -99,7 +98,7 @@ class Index
             $items = array_values($items);
         }
 
-        if ($invert)
+        if ($setup['invert'] ?? 0)
         {
             $items = array_reverse($items);
         }
@@ -110,14 +109,16 @@ class Index
     /**
      * Updates an index
      *
-     * @param array $documents
+     * @param array|mixed $documents
      * @return bool
+     * @throws \Exception
      */
     public function update($documents) : bool
     {
         if (!is_array($documents))
         {
-            $documents = [$documents];
+            if (is_object($documents)) $documents = [$documents];
+            else throw new \Exception('Input must be an object or an array of objects.');
         }
 
         foreach ($documents as $document)
@@ -129,7 +130,7 @@ class Index
 
             if (!$this->kv)
             {
-                $index = json_decode(@file_get_contents($this->filename), 1) ?: [];
+                $index = json_decode(@file_get_contents($this->filename)) ?: [];
                 $this->kv = $index->kv ?? [];
             }
 
@@ -162,6 +163,12 @@ class Index
 
         ksort($this->kv);
 
-        return file_put_contents($this->filename, json_encode(['options' => $this->options, 'kv' => $this->kv])) !== false;
+        $json = ['kv' => $this->kv];
+        if ($this->options)
+        {
+            $json['options'] = $this->options;
+        }
+
+        return file_put_contents($this->filename, json_encode($json)) !== false;
     }
 }
