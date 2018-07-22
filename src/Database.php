@@ -387,11 +387,11 @@ class Database
     {
         if (!file_exists($indexFile = $this->dir . '/' . $collection . '.' . $field))
         {
-            if (!file_exists($this->dir)) mkdir($this->dir);
+            if (!file_exists($this->dir)) mkdir($this->dir, 0700, true);
             file_put_contents($indexFile, '[]');
+            $this->indices[$collection][$field] = new Index($collection, $field, $this->dir, $options);
         }
-
-        if (!isset ($this->indices[$collection][$field]))
+        else if (!isset ($this->indices[$collection][$field]))
         {
             $this->indices[$collection][$field] = new Index($collection, $field, $this->dir, $options);
         }
@@ -414,6 +414,7 @@ class Database
      * @param string $collection
      * @param string $field
      * @param mixed $doc
+     * @throws \Exception
      */
     public function updateIndex(string $collection, string $field, object $doc) : void
     {
@@ -445,10 +446,9 @@ class Database
     {
         if ($print)
         {
-            foreach ($this->explanations as $e)
-            {
-                echo "* $e\n";
-            }
+            $echo = "Explain:\n--------\n";
+            foreach ($this->explanations as $e) $echo .= "* $e\n";
+            echo $echo . "\n";
         }
 
         return $this->explanations;
